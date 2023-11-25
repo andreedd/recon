@@ -284,7 +284,6 @@ def reconcile():
 
     # Update the running containers to match the configuration if out of sync.
     reconcile_errors = [error for errors in validation_errors.values() for error in errors]
-
     if reconcile_errors:
         print("Reconcile failed:")
         for error_message in reconcile_errors:
