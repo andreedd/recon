@@ -5,8 +5,8 @@ import reconcile_git
 
 
 def reconcile():
-    reconcile_docker.reconcile()
     reconcile_git.reconcile()
+    reconcile_docker.reconcile()
 
 
 if __name__ == '__main__':
