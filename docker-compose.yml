@@ -27,7 +27,7 @@ services:
     labels:
       com.example.description: "Nginx container"
   nginx-gitopscompose:
-    image: ddeeh/composegitops:latest
+    image: ddeeh/composegitops:dae92b0e0f7dbf1128966f7393e4ccf118a4904e
     ports:
       - "80:80"
     restart: always
