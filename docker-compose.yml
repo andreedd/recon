@@ -1,4 +1,4 @@
-version: '3.9'
+version: '3'
 
 services:
   nginx:
@@ -10,16 +10,9 @@ services:
     volumes:
       - nginx_logs:/var/log/nginx
     environment:
-      - NGINX_HOST=example.com
-      - NGINX_PORT=80
-      - NGINX_WORKER_PROCESSES=auto
-      - NGINX_WORKER_CONNECTIONS=1024
-      - NGINX_KEEPALIVE_TIMEOUT=65
-      - NGINX_GZIP=on
-      - MY_SECRET=my_secret_value  # Use an environment variable for secret-like data
+      - MY_SECRET=my_secret_value
     restart: always
     networks:
-      - frontend
       - backend
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost"]
@@ -33,16 +26,8 @@ services:
         max-file: "5"
     labels:
       com.example.description: "Nginx container"
-      com.example.department: "IT"
-      com.example.label-with-empty-value: ""
-    extra_hosts:
-      - "host.example.com:192.168.1.100"
-    sysctls:
-      - net.core.somaxconn=1024
-
   nginx-gitopscompose:
-    image: ddeeh/argogitops:76ac7ec72dcbe53270270f9a8deac04e66e51a28
-    #ddeeh/composegitops:76ac7ec72dcbe53270270f9a8deac04e66e51a28
+    image: ddeeh/composegitops:latest
     ports:
       - "80:80"
     restart: always
