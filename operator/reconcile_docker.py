@@ -3,11 +3,20 @@ import os
 import yaml
 import docker
 
-COMPOSE_PATH = '/Users/andre/dev/recon/docker-compose.big.yml'
+COMPOSE_PATH = 'docker-compose.big.yml'
 
+# Define error messages
 error_messages = {
-    'no_container_found': 'The image defined in the compose file does not match a image of a running container.',
-    'ports_do_not_match': 'The ports defined in the compose file does not match the ports of the running container.',
+    'no_container_found': 'The service is not running as expected - no matching container found.',
+    'ports_do_not_match': 'Ports configuration does not match between the compose file and the running container.',
+    'environment_variables_do_not_match': 'Environment variables do not match between the compose file and the running container.',
+    'restart_policy_does_not_match': 'Restart policy does not match between the compose file and the running container.',
+    'networks_do_not_match': 'Networks configuration does not match between the compose file and the running container.',
+    'healthcheck_does_not_match': 'Healthcheck configuration does not match between the compose file and the running container.',
+    'logging_does_not_match': 'Logging configuration does not match between the compose file and the running container.',
+    'labels_do_not_match': 'Labels configuration does not match between the compose file and the running container.',
+    'extra_hosts_do_not_match': 'Extra hosts configuration does not match between the compose file and the running container.',
+    'sysctls_do_not_match': 'Sysctls configuration does not match between the compose file and the running container.'
 }
 
 
@@ -167,57 +176,65 @@ def is_sysctls_matching(container_sysctls, config_sysctls):
     return set(container_keys) == set(config_keys)
 
 
-def compare_config(container_info, service_config):
-    print(container_info['HostConfig']['PortBindings'])
-    if are_ports_matching(container_info['HostConfig']['PortBindings'], service_config.get('ports')):
-        print("Ports match")
+def compare_config(container_info, service_config, service_name):
+    error_msgs = []  # Store error messages for this comparison
 
-    if are_environment_variables_matching(container_info['Config']['Env'], service_config.get('environment')):
-        print("Environment variables match")
+    if not are_ports_matching(container_info['HostConfig']['PortBindings'], service_config.get('ports')):
+        error_msgs.append((service_name, error_messages['ports_do_not_match']))
 
-    if is_restart_policy_matching(container_info['HostConfig']['RestartPolicy']['Name'], service_config.get('restart')):
-        print("Restart policy matches")
+    if not are_environment_variables_matching(container_info['Config']['Env'], service_config.get('environment')):
+        error_msgs.append((service_name, error_messages['environment_variables_do_not_match']))
 
-    if are_networks_matching(container_info['NetworkSettings'].get('Networks'), service_config.get('networks')):
-        print("Networks match")
+    if not is_restart_policy_matching(container_info['HostConfig']['RestartPolicy']['Name'], service_config.get('restart')):
+        error_msgs.append((service_name, error_messages['restart_policy_does_not_match']))
 
-    if is_healthcheck_matching(container_info['Config'].get('Healthcheck'), service_config.get('healthcheck')):
-        print("Healthcheck matches")
+    if not are_networks_matching(container_info['NetworkSettings'].get('Networks'), service_config.get('networks')):
+        error_msgs.append((service_name, error_messages['networks_do_not_match']))
 
-    if is_logging_matching(container_info['HostConfig'].get('LogConfig'), service_config.get('logging')):
-        print("Logging matches")
+    if not is_healthcheck_matching(container_info['Config'].get('Healthcheck'), service_config.get('healthcheck')):
+        error_msgs.append((service_name, error_messages['healthcheck_does_not_match']))
 
-    if is_labels_matching(container_info['Config'].get('Labels'), service_config.get('labels')):
-        print("Labels matches")
+    if not is_logging_matching(container_info['HostConfig'].get('LogConfig'), service_config.get('logging')):
+        error_msgs.append((service_name, error_messages['logging_does_not_match']))
 
-    if is_extra_hosts_matching(container_info['HostConfig'].get('ExtraHosts'), service_config.get('extra_hosts')):
-        print("Extra hosts matches")
+    if not is_labels_matching(container_info['Config'].get('Labels'), service_config.get('labels')):
+        error_msgs.append((service_name, error_messages['labels_do_not_match']))
 
-    if is_sysctls_matching(container_info['HostConfig'].get('Sysctls'), service_config.get('sysctls')):
-        print("Sysctls matches")
+    if not is_extra_hosts_matching(container_info['HostConfig'].get('ExtraHosts'), service_config.get('extra_hosts')):
+        error_msgs.append((service_name, error_messages['extra_hosts_do_not_match']))
+
+    if not is_sysctls_matching(container_info['HostConfig'].get('Sysctls'), service_config.get('sysctls')):
+        error_msgs.append((service_name, error_messages['sysctls_do_not_match']))
+
+    return error_msgs  # Return any collected error messages with service names
 
 
 def validate_services(compose_services, client):
     running_containers = get_running_containers(client)
+    error_msgs = {}  # Store error messages for each service
 
     for service_name, service_config in compose_services.items():
         container = find_matching_container(running_containers, service_config)
         if container:
-            compare_config(container.attrs, service_config)
+            error_msgs[service_name] = compare_config(container.attrs, service_config, service_name)
         else:
-            break
+            error_msgs[service_name] = [error_messages['no_container_found']]
+
+    return error_msgs  # Return error messages for all services
 
 
 def validate_items(config_items, client, item_type, project_name):
     docker_items = getattr(client, item_type).list()
     docker_item_names = [item.name.split('/')[-1] for item in docker_items]
 
+    error_msgs = []  # Store error messages for this item type
+
     for item_name in config_items:
         full_item_name = f"{project_name}_{item_name}" if project_name else item_name
         if full_item_name not in docker_item_names:
-            print(f"{item_type.capitalize()} '{full_item_name}' is not present or not created.")
-        else:
-            print(f"{item_type.capitalize()} '{full_item_name}' is present.")
+            error_msgs.append(f"{item_type.capitalize()} '{full_item_name}' is not present or not created.")
+
+    return error_msgs  # Return error messages for the items
 
 
 def get_project_name(compose_path):
@@ -236,20 +253,26 @@ def reconcile():
     project_name = get_project_name(COMPOSE_PATH)
 
     # Validate that running containers are matching the configuration.
+    validation_errors = {}  # Store all validation errors
 
-    error_messages = []
     for root_level_key in compose_config:
         if root_level_key == 'version':
-            print(f"Version: {compose_config[root_level_key]}")
+            print(f"Compose Version: {compose_config[root_level_key]}")
         elif root_level_key == 'services':
-            validate_services(compose_config[root_level_key], client)
+            validation_errors.update(validate_services(compose_config[root_level_key], client))
         elif root_level_key == 'volumes':
-            validate_items(compose_config[root_level_key], client, 'volumes', project_name)
+            validation_errors['volumes'] = validate_items(compose_config[root_level_key], client, 'volumes', project_name)
         elif root_level_key == 'networks':
-            validate_items(compose_config[root_level_key], client, 'networks', project_name)
+            validation_errors['networks'] = validate_items(compose_config[root_level_key], client, 'networks', project_name)
 
     # Update the running containers to match the configuration if out of sync.
-    if error_messages:
+    reconcile_errors = [error for errors in validation_errors.values() for error in errors]
+
+    if reconcile_errors:
         print("Reconcile failed:")
-        for error_message in error_messages:
+        for error_message in reconcile_errors:
             print(error_message)
+
+
+if __name__ == '__main__':
+    reconcile()
