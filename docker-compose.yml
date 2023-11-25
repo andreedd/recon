@@ -31,7 +31,6 @@ services:
     ports:
       - "80:80"
     restart: always
-    # Filechange test
     command: [ "nginx", "-g", "daemon off;" ]
     networks:
       - frontend

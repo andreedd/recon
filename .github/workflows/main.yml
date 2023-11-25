@@ -7,7 +7,7 @@ on:
     paths:
       - 'index.html'
       - '.github/workflows/main.yml'
-
+      - 'Dockerfile'
 jobs:
   build:
     name: Build
