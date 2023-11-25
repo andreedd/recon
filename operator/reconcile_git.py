@@ -1,6 +1,8 @@
 import os
 import git
 
+import reconcile_docker
+
 
 def is_remote_up_to_date(repo_path):
     repo = git.Repo(repo_path)
@@ -38,6 +40,8 @@ def reconcile():
     if not is_remote_up_to_date(local_repo_path):
         sync_remote_repository(local_repo_path)
         print("Repository synchronized.")
+        # Reconcile the Docker images after the repository is synchronized
+        reconcile_docker.reconcile()
     else:
         print("Repository is already up to date.")
 

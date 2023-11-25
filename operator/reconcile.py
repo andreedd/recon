@@ -3,7 +3,7 @@ import reconcile_git
 
 
 def reconcile():
-    # reconcile_docker.reconcile()
+    reconcile_docker.reconcile()
     reconcile_git.reconcile()
 
 
