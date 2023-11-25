@@ -5,4 +5,5 @@ def reconcile():
     reconcile_docker.reconcile()
 
 
-reconcile()
+if __name__ == '__main__':
+    reconcile()

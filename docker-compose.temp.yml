@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+  nginx-gitopscompose:
+    image: ddeeh/argogitops:76ac7ec72dcbe53270270f9a8deac04e66e51a28
+    #ddeeh/composegitops:76ac7ec72dcbe53270270f9a8deac04e66e51a28
+    ports:
+      - "80:80"
+    restart: always
+    # Filechange test
+    command: ["nginx", "-g", "daemon off;"]
+    networks:
+      - my_network
+    volumes:
+      - app_data:/usr/share/nginx/html/
+
+  nginx-gitopscompose-second:
+    image: ddeeh/argogitops:1.0
+    #ddeeh/composegitops:76ac7ec72dcbe53270270f9a8deac04e66e51a28
+    ports:
+      - "9000:80"
+      - "9001:8080"
+    restart: always
+    # Filechange test
+    command: ["nginx", "-g", "daemon off;"]
+    networks:
+      - my_network
+    volumes:
+      - app_data_second:/usr/share/nginx/html/
+
+volumes:
+  app_data:
+  app_data_second:
+
+networks:
+  my_network:
+    driver: bridge

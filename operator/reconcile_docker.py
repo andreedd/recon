@@ -1,9 +1,10 @@
 import os
+import subprocess
 
 import yaml
 import docker
 
-COMPOSE_PATH = 'docker-compose.big.yml'
+COMPOSE_PATH = 'docker-compose.yml'
 
 # Define error messages
 error_messages = {
@@ -242,6 +243,22 @@ def get_project_name(compose_path):
     return os.path.basename(directory)
 
 
+def docker_compose_down():
+    try:
+        subprocess.run(["docker-compose", "down"], check=True)
+        print("Docker Compose down successful")
+    except subprocess.CalledProcessError as e:
+        print(f"Error executing docker-compose down: {e}")
+
+
+def docker_compose_up():
+    try:
+        subprocess.run(["docker-compose", "up", "-d"], check=True)
+        print("Docker Compose up successful")
+    except subprocess.CalledProcessError as e:
+        print(f"Error executing docker-compose up: {e}")
+
+
 def reconcile():
     """
     Check that the docker-compose file is running as expected.
@@ -272,6 +289,9 @@ def reconcile():
         print("Reconcile failed:")
         for error_message in reconcile_errors:
             print(error_message)
+
+        docker_compose_down()
+        docker_compose_up()
 
 
 if __name__ == '__main__':
