@@ -1,46 +1,9 @@
 version: '3'
 
 services:
-  nginx:
-    image: nginx:latest
-    container_name: my_nginx
-    ports:
-      - "8080:80"
-      - "443:443"
-    volumes:
-      - nginx_logs:/var/log/nginx
-    environment:
-      - MY_SECRET=my_secret_value
-    restart: always
-    networks:
-      - backend
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "5"
-    labels:
-      com.example.description: "Nginx container"
   nginx-gitopscompose:
     image: ddeeh/composegitops:2212f0555576a787af4c0ca9200111d5f938b41e
     ports:
       - "80:80"
     restart: always
     command: [ "nginx", "-g", "daemon off;" ]
-    networks:
-      - frontend
-
-networks:
-  frontend:
-    driver: bridge
-  backend:
-    driver: bridge
-
-volumes:
-  nginx_logs:
-    driver: local
