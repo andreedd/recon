@@ -1,3 +1,4 @@
+import datetime
 import os
 import subprocess
 
@@ -273,9 +274,7 @@ def reconcile():
     validation_errors = {}  # Store all validation errors
 
     for root_level_key in compose_config:
-        if root_level_key == 'version':
-            print(f"Compose Version: {compose_config[root_level_key]}")
-        elif root_level_key == 'services':
+        if root_level_key == 'services':
             validation_errors.update(validate_services(compose_config[root_level_key], client))
         elif root_level_key == 'volumes':
             validation_errors['volumes'] = validate_items(compose_config[root_level_key], client, 'volumes', project_name)
@@ -291,6 +290,9 @@ def reconcile():
 
         docker_compose_down()
         docker_compose_up()
+    else:
+        # print the timestamp and that the app is in sync
+        print(f"{datetime.datetime.now()} - App is in sync")
 
 
 if __name__ == '__main__':
