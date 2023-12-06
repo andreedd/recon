@@ -247,6 +247,8 @@ def get_project_name(compose_path):
 def docker_compose_down():
     try:
         subprocess.run(["docker-compose", "down"], check=True)
+        with open('/dev/null', 'w') as devnull:
+            subprocess.run(["docker-compose", "down"], check=True, stdout=devnull, stderr=subprocess.STDOUT)
         print("Docker Compose down successful")
     except subprocess.CalledProcessError as e:
         print(f"Error executing docker-compose down: {e}")
@@ -254,7 +256,8 @@ def docker_compose_down():
 
 def docker_compose_up():
     try:
-        subprocess.run(["docker-compose", "up", "-d"], check=True)
+        with open('/dev/null', 'w') as devnull:
+            subprocess.run(["docker-compose", "up", "-d"], check=True, stdout=devnull, stderr=subprocess.STDOUT)
         print("Docker Compose up successful")
     except subprocess.CalledProcessError as e:
         print(f"Error executing docker-compose up: {e}")

@@ -3,7 +3,7 @@ import time
 import reconcile_docker
 import reconcile_git
 
-SCHEDULE_INTERVAL_MINUTES = 1
+SCHEDULE_INTERVAL_MINUTES = 5
 
 
 def reconcile():
