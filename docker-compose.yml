@@ -2,7 +2,7 @@ version: '3'
 
 services:
   nginx-gitopscompose:
-    image: ddeeh/composegitops:303e3472c1ee5919f93e8b4ff2a40f43088640b9
+    image: ddeeh/composegitops:bd79d1c72507310c0ba711cfc1020bc5e85e7cac
     ports:
       - "80:80"
     command: [ "nginx", "-g", "daemon off;" ]
