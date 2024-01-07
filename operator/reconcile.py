@@ -7,8 +7,11 @@ SCHEDULE_INTERVAL_MINUTES = 5
 
 
 def reconcile():
-    print("Running reconcile...")
+    print("Checking for differences...")
+
+    print("Running Git repository validation...")
     reconcile_git.reconcile()
+    print("Running Docker configuration validation...")
     reconcile_docker.reconcile()
 
 

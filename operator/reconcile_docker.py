@@ -287,12 +287,13 @@ def reconcile():
     # Update the running containers to match the configuration if out of sync.
     reconcile_errors = [error for errors in validation_errors.values() for error in errors]
     if reconcile_errors:
-        print("Reconcile failed:")
+        print("Validation failed:")
         for error_message in reconcile_errors:
             print(error_message)
-
+        print("Reconciling application...")
         docker_compose_down()
         docker_compose_up()
+        print("Reconcile completed, the application is up to date.")
     else:
         # print the timestamp and that the app is in sync
         print(f"{datetime.datetime.now()} - App is in sync")

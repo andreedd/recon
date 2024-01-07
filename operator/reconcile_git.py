@@ -29,10 +29,11 @@ def reconcile():
     repo = git.Repo(local_repo_path)
 
     if not is_remote_up_to_date(repo):
+        print("Differences found in the repository, synchronizing repository...")
         sync_remote_repository(repo)
         print("Repository synchronized.")
     else:
-        print("Repository is already up to date.")
+        print("Repository is up to date.")
 
 
 if __name__ == '__main__':
